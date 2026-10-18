@@ -80,16 +80,37 @@
       </div>
     </section>
 
+    <!-- Pinned Creator -->
+    <section id="pinnedCreator">
+      <h2>Pinned Creator</h2>
+      <div class="creator-card" style="border: 2px solid var(--accent);">
+        <h3>Andrei RPK</h3>
+        <p><strong>Building games on @RemixGG_ 🎮 ➡️ <a href="https://remix.gg/@andrei_rpk" target="_blank">remix.gg/@andrei_rpk</a></strong></p>
+        <p><small>Web3 app builder • Trader • Holder • Freelancer • @base #based</small></p>
+        <p>
+          <button id="openRemixBtn" class="btn">Open Profile in FanArena</button>
+          <a href="https://remix.gg/@andrei_rpk" target="_blank" class="btn secondary" style="margin-left:0.5rem; text-decoration:none; display:inline-block;">Open on Remix</a>
+        </p>
+      </div>
+      <div id="remixEmbed" class="hidden" style="margin-top:1rem; border:1px solid #333; border-radius:8px; overflow:hidden; height:600px;">
+        <div style="background:#111; padding:0.5rem; display:flex; justify-content:space-between; align-items:center;">
+          <span>Viewing remix.gg/@andrei_rpk</span>
+          <button id="closeEmbed" class="secondary">Close</button>
+        </div>
+        <iframe id="remixFrame" src="" style="width:100%; height:calc(100% - 40px); border:none;" sandbox="allow-scripts allow-same-origin allow-popups allow-forms"></iframe>
+      </div>
+    </section>
+
     <!-- Creators -->
     <section>
       <h2>Creators</h2>
       <div id="creatorsList" class="grid">Loading...</div>
     </section>
 
-    <!-- Example Creator / Tournament Flow -->
+    <!-- Example Creator / Tournament Flow (using pinned) -->
     <section id="exampleCreator">
-      <h2>Example Creator: DemoCreator</h2>
-      <p id="creatorInfo">Bio and description will load here.</p>
+      <h2>Featured Creator: Andrei RPK</h2>
+      <p id="creatorInfo">Building games on @RemixGG_ 🎮 ➡️ https://remix.gg/@andrei_rpk</p>
       <div class="grid">
         <div>
           <h3>Fan Token</h3>
@@ -465,6 +486,19 @@
         await tx.wait();
         alert("Demo swap simulated (transfer to self). In production, integrate Uniswap or custom AMM.");
       } catch (e) { alert(e.message); }
+    };
+
+    // Pinned Remix profile embed
+    document.getElementById('openRemixBtn').onclick = () => {
+      const embed = document.getElementById('remixEmbed');
+      const frame = document.getElementById('remixFrame');
+      frame.src = "https://remix.gg/@andrei_rpk";
+      embed.classList.remove('hidden');
+      embed.scrollIntoView({ behavior: 'smooth' });
+    };
+    document.getElementById('closeEmbed').onclick = () => {
+      document.getElementById('remixEmbed').classList.add('hidden');
+      document.getElementById('remixFrame').src = "";
     };
   </script>
 </body>
