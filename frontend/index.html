@@ -32,6 +32,7 @@
     footer { text-align: center; padding: 2rem; color: var(--muted); font-size: 0.8rem; }
     .hidden { display: none; }
     #adminPanel { border: 2px dashed var(--accent); }
+    code { background: #111; padding: 0.1rem 0.3rem; border-radius: 3px; }
   </style>
 </head>
 <body>
@@ -48,8 +49,10 @@
   </header>
 
   <main>
-    <div class="demo-badge">DEMO ONLY â Tiny amounts, no real value, airdrop not live</div>
-    <p style="font-size:0.9rem;color:var(--muted);">One-sentence: Creator fan-token tournaments on Monad: buy a creatorâs token to enter their games, predict winners with USDC, earn tournament NFTs that unlock eligibility for a future project token airdrop.</p>
+    <div class="demo-badge">DEMO ONLY — Tiny amounts, no real value, airdrop not live</div>
+    <p style="font-size:0.9rem;color:var(--muted);">
+      One-sentence: Creator fan-token tournaments on Monad: buy a creator’s token to enter their games, predict winners with USDC, earn tournament NFTs that unlock eligibility for a future project token airdrop.
+    </p>
 
     <!-- Admin / Owner Section -->
     <section id="ownerGate">
@@ -58,7 +61,7 @@
       <input type="password" id="securityKey" placeholder="Security key">
       <button id="unlockAdmin">Unlock Admin</button>
       <div id="adminPanel" class="hidden">
-        <h3>Admin Panel â Add Creator</h3>
+        <h3>Admin Panel — Add Creator</h3>
         <input id="cName" placeholder="Creator Name">
         <input id="cBio" placeholder="Short Bio">
         <textarea id="cDesc" placeholder="Description" rows="3"></textarea>
@@ -77,16 +80,37 @@
       </div>
     </section>
 
+    <!-- Pinned Creator -->
+    <section id="pinnedCreator">
+      <h2>Pinned Creator</h2>
+      <div class="creator-card" style="border: 2px solid var(--accent);">
+        <h3>Andrei RPK</h3>
+        <p><strong>Building games on @RemixGG_ 🎮 ➡️ <a href="https://remix.gg/@andrei_rpk" target="_blank">remix.gg/@andrei_rpk</a></strong></p>
+        <p><small>Web3 app builder • Trader • Holder • Freelancer • @base #based</small></p>
+        <p>
+          <button id="openRemixBtn" class="btn">Open Profile in FanArena</button>
+          <a href="https://remix.gg/@andrei_rpk" target="_blank" class="btn secondary" style="margin-left:0.5rem; text-decoration:none; display:inline-block;">Open on Remix</a>
+        </p>
+      </div>
+      <div id="remixEmbed" class="hidden" style="margin-top:1rem; border:1px solid #333; border-radius:8px; overflow:hidden; height:600px;">
+        <div style="background:#111; padding:0.5rem; display:flex; justify-content:space-between; align-items:center;">
+          <span>Viewing remix.gg/@andrei_rpk</span>
+          <button id="closeEmbed" class="secondary">Close</button>
+        </div>
+        <iframe id="remixFrame" src="" style="width:100%; height:calc(100% - 40px); border:none;" sandbox="allow-scripts allow-same-origin allow-popups allow-forms"></iframe>
+      </div>
+    </section>
+
     <!-- Creators -->
     <section>
       <h2>Creators</h2>
       <div id="creatorsList" class="grid">Loading...</div>
     </section>
 
-    <!-- Example Creator / Tournament Flow -->
+    <!-- Example Creator / Tournament Flow (using pinned) -->
     <section id="exampleCreator">
-      <h2>Example Creator: DemoCreator</h2>
-      <p id="creatorInfo">Bio and description will load here.</p>
+      <h2>Featured Creator: Andrei RPK</h2>
+      <p id="creatorInfo">Building games on @RemixGG_ 🎮 ➡️ https://remix.gg/@andrei_rpk</p>
       <div class="grid">
         <div>
           <h3>Fan Token</h3>
@@ -120,13 +144,13 @@
     <!-- Swap Section -->
     <section>
       <h2>Fan Token Trade / Swap (Demo)</h2>
-      <p>Owner-added tokens for trading. Demo only â simple transfer UI.</p>
+      <p>Owner-added tokens for trading. Demo only — simple transfer UI (not a real AMM).</p>
       <div id="swapTokens">No tokens added yet.</div>
       <div id="swapUI" class="hidden">
         <select id="swapFrom"></select>
         <select id="swapTo"></select>
         <input type="number" id="swapAmount" placeholder="Amount" value="1">
-        <button id="doSwap">Demo Swap (transfer)</button>
+        <button id="doSwap">Demo Swap (transfer to self)</button>
       </div>
     </section>
   </main>
@@ -136,12 +160,12 @@
   </footer>
 
   <script>
-    // ========== CONFIG â UPDATE AFTER DEPLOY ==========
+    // ========== CONFIG — UPDATE AFTER DEPLOY ==========
     const MONAD_CHAIN_ID = 10143;
     const RPC_URL = "https://testnet-rpc.monad.xyz";
     const EXPLORER = "https://testnet.monadexplorer.com";
 
-    // Placeholder addresses â replace with deployed ones
+    // Placeholder addresses — replace with deployed ones after running deploy.js
     const CONTRACTS = {
       registry: "0x0000000000000000000000000000000000000000",
       fanToken: "0x0000000000000000000000000000000000000000",
@@ -193,6 +217,7 @@
       }
       loadCreators();
       loadMarket();
+      setTimeout(loadSwapTokens, 500);
     });
 
     document.getElementById('connectBtn').onclick = () => connectWallet(false);
@@ -365,8 +390,7 @@
       const fan = new ethers.Contract(CONTRACTS.fanToken, ERC20_ABI, provider);
       const bal = await fan.balanceOf(account);
       if (bal.gte(ethers.utils.parseUnits("1", 18))) {
-        document.getElementById('tournamentStatus').innerHTML = '<div class="status success">You hold Fan Token â Tournament entered! (Demo: game would open here)</div>';
-        // In real: window.open game link
+        document.getElementById('tournamentStatus').innerHTML = '<div class="status success">You hold Fan Token — Tournament entered! (Demo: game would open here)</div>';
       } else {
         document.getElementById('tournamentStatus').innerHTML = '<div class="status warning">Need at least 1 Fan Token to enter.</div>';
       }
@@ -379,8 +403,8 @@
         const count = await nft.balanceOf(account);
         document.getElementById('nftCount').textContent = count.toString();
         document.getElementById('airdropEligible').innerHTML = count.gt(0)
-          ? '<div class="status success">You hold ' + count + ' Tournament NFT(s) â Eligible for future project airdrop (not live yet)</div>'
-          : '<div class="status warning">No Tournament NFT â not eligible yet</div>';
+          ? '<div class="status success">You hold ' + count + ' Tournament NFT(s) → Eligible for future project airdrop (not live yet)</div>'
+          : '<div class="status warning">No Tournament NFT — not eligible yet</div>';
       } catch (e) { console.error(e); }
     }
     document.getElementById('checkNFT').onclick = checkNFT;
@@ -454,19 +478,28 @@
     document.getElementById('doSwap').onclick = async () => {
       if (!signer) return alert("Connect");
       const from = document.getElementById('swapFrom').value;
-      const to = document.getElementById('swapTo').value;
       const amt = ethers.utils.parseUnits(document.getElementById('swapAmount').value || "1", 18);
       const token = new ethers.Contract(from, ERC20_ABI, signer);
       try {
-        // Demo "swap": just transfer to self or a dummy (real would be AMM)
-        const tx = await token.transfer(account, amt); // no-op-ish for demo
+        // Demo "swap": just transfer to self (real would be AMM)
+        const tx = await token.transfer(account, amt);
         await tx.wait();
         alert("Demo swap simulated (transfer to self). In production, integrate Uniswap or custom AMM.");
       } catch (e) { alert(e.message); }
     };
 
-    // Initial loads
-    setTimeout(loadSwapTokens, 500);
+    // Pinned Remix profile embed
+    document.getElementById('openRemixBtn').onclick = () => {
+      const embed = document.getElementById('remixEmbed');
+      const frame = document.getElementById('remixFrame');
+      frame.src = "https://remix.gg/@andrei_rpk";
+      embed.classList.remove('hidden');
+      embed.scrollIntoView({ behavior: 'smooth' });
+    };
+    document.getElementById('closeEmbed').onclick = () => {
+      document.getElementById('remixEmbed').classList.add('hidden');
+      document.getElementById('remixFrame').src = "";
+    };
   </script>
 </body>
 </html>
