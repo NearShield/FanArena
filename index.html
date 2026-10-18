@@ -32,6 +32,7 @@
     footer { text-align: center; padding: 2rem; color: var(--muted); font-size: 0.8rem; }
     .hidden { display: none; }
     #adminPanel { border: 2px dashed var(--accent); }
+    code { background: #111; padding: 0.1rem 0.3rem; border-radius: 3px; }
   </style>
 </head>
 <body>
@@ -49,7 +50,9 @@
 
   <main>
     <div class="demo-badge">DEMO ONLY — Tiny amounts, no real value, airdrop not live</div>
-    <p style="font-size:0.9rem;color:var(--muted);">One-sentence: Creator fan-token tournaments on Monad: buy a creator’s token to enter their games, predict winners with USDC, earn tournament NFTs that unlock eligibility for a future project token airdrop.</p>
+    <p style="font-size:0.9rem;color:var(--muted);">
+      One-sentence: Creator fan-token tournaments on Monad: buy a creator’s token to enter their games, predict winners with USDC, earn tournament NFTs that unlock eligibility for a future project token airdrop.
+    </p>
 
     <!-- Admin / Owner Section -->
     <section id="ownerGate">
@@ -120,13 +123,13 @@
     <!-- Swap Section -->
     <section>
       <h2>Fan Token Trade / Swap (Demo)</h2>
-      <p>Owner-added tokens for trading. Demo only — simple transfer UI.</p>
+      <p>Owner-added tokens for trading. Demo only — simple transfer UI (not a real AMM).</p>
       <div id="swapTokens">No tokens added yet.</div>
       <div id="swapUI" class="hidden">
         <select id="swapFrom"></select>
         <select id="swapTo"></select>
         <input type="number" id="swapAmount" placeholder="Amount" value="1">
-        <button id="doSwap">Demo Swap (transfer)</button>
+        <button id="doSwap">Demo Swap (transfer to self)</button>
       </div>
     </section>
   </main>
@@ -141,7 +144,7 @@
     const RPC_URL = "https://testnet-rpc.monad.xyz";
     const EXPLORER = "https://testnet.monadexplorer.com";
 
-    // Placeholder addresses — replace with deployed ones
+    // Placeholder addresses — replace with deployed ones after running deploy.js
     const CONTRACTS = {
       registry: "0x0000000000000000000000000000000000000000",
       fanToken: "0x0000000000000000000000000000000000000000",
@@ -193,6 +196,7 @@
       }
       loadCreators();
       loadMarket();
+      setTimeout(loadSwapTokens, 500);
     });
 
     document.getElementById('connectBtn').onclick = () => connectWallet(false);
@@ -366,7 +370,6 @@
       const bal = await fan.balanceOf(account);
       if (bal.gte(ethers.utils.parseUnits("1", 18))) {
         document.getElementById('tournamentStatus').innerHTML = '<div class="status success">You hold Fan Token — Tournament entered! (Demo: game would open here)</div>';
-        // In real: window.open game link
       } else {
         document.getElementById('tournamentStatus').innerHTML = '<div class="status warning">Need at least 1 Fan Token to enter.</div>';
       }
@@ -454,19 +457,15 @@
     document.getElementById('doSwap').onclick = async () => {
       if (!signer) return alert("Connect");
       const from = document.getElementById('swapFrom').value;
-      const to = document.getElementById('swapTo').value;
       const amt = ethers.utils.parseUnits(document.getElementById('swapAmount').value || "1", 18);
       const token = new ethers.Contract(from, ERC20_ABI, signer);
       try {
-        // Demo "swap": just transfer to self or a dummy (real would be AMM)
-        const tx = await token.transfer(account, amt); // no-op-ish for demo
+        // Demo "swap": just transfer to self (real would be AMM)
+        const tx = await token.transfer(account, amt);
         await tx.wait();
         alert("Demo swap simulated (transfer to self). In production, integrate Uniswap or custom AMM.");
       } catch (e) { alert(e.message); }
     };
-
-    // Initial loads
-    setTimeout(loadSwapTokens, 500);
   </script>
 </body>
 </html>
