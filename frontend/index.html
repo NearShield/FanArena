@@ -2,648 +2,698 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FanArena - Fan Token Platform</title>
-  <script src="https://cdn.ethers.io/lib/ethers-5.7.2.umd.min.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FanArena</title>
+  <meta name="theme-color" content="#100d14">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600&family=Syne:wght@700;800&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #0c0a14;
-      --sidebar: #120e1c;
-      --card: #1a1428;
-      --card-hover: #221a34;
-      --accent: #a855f7;
-      --orange: #f97316;
-      --pink: #ec4899;
-      --teal: #14b8a6;
-      --text: #f8f7ff;
-      --text-secondary: #c4b5fd;
-      --muted: #8b7bb8;
-      --border: #2a2040;
-      --radius: 16px;
-      --radius-sm: 10px;
+      --bg: #100d14;
+      --surface: #1a1622;
+      --surface-2: #241e2e;
+      --fg: #f6f1ea;
+      --muted: #a398ad;
+      --primary: #ff6a1a;
+      --primary-fg: #1a0d06;
+      --teal: #2ee6c7;
+      --pink: #ff4d8d;
+      --line: #342c40;
+      --radius: 1.25rem;
     }
     * { box-sizing: border-box; }
+    html, body { min-height: 100%; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, system-ui, sans-serif;
-      background: var(--bg);
-      color: var(--text);
       margin: 0;
-      display: flex;
-      min-height: 100vh;
-      -webkit-font-smoothing: antialiased;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: Outfit, ui-sans-serif, system-ui, sans-serif;
+      line-height: 1.5;
     }
-    .sidebar {
-      width: 240px;
-      background: var(--sidebar);
-      border-right: 1px solid var(--border);
-      padding: 1.5rem 1rem;
-      flex-shrink: 0;
-      display: flex;
-      flex-direction: column;
+    button, a { font: inherit; }
+    button { cursor: pointer; }
+    button:disabled { cursor: not-allowed; opacity: 0.6; }
+    :focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: color-mix(in srgb, var(--bg) 95%, transparent);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--line);
     }
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      margin-bottom: 2rem;
-      padding: 0 0.5rem;
-    }
-    .logo-icon {
-      width: 36px;
-      height: 36px;
-      background: linear-gradient(135deg, #a855f7, #ec4899);
-      border-radius: 10px;
+    .bar, .tabs, main { max-width: 64rem; margin: 0 auto; }
+    .bar {
       display: flex;
       align-items: center;
-      justify-content: center;
-      font-weight: 800;
-      font-size: 1.1rem;
-    }
-    .logo-text {
-      font-weight: 800;
-      font-size: 1.15rem;
-      background: linear-gradient(135deg, #a855f7, #ec4899);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-    .logo-sub {
-      font-size: 0.65rem;
-      color: var(--muted);
-      letter-spacing: 0.05em;
-    }
-    .nav-item {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      padding: 0.7rem 1rem;
-      border-radius: 10px;
-      color: var(--text-secondary);
-      text-decoration: none;
-      font-size: 0.9rem;
-      margin-bottom: 0.25rem;
-      transition: all 0.15s;
-    }
-    .nav-item:hover, .nav-item.active {
-      background: linear-gradient(90deg, rgba(168,85,247,0.25), transparent);
-      color: white;
-    }
-    .nav-item.active {
-      background: linear-gradient(90deg, #a855f7, #7c3aed);
-      color: white;
-    }
-    .sidebar-footer {
-      margin-top: auto;
-      background: linear-gradient(135deg, rgba(168,85,247,0.2), rgba(249,115,22,0.15));
-      border-radius: 12px;
-      padding: 1rem;
-      border: 1px solid rgba(168,85,247,0.3);
-    }
-    .main {
-      flex: 1;
-      padding: 1.5rem 2rem;
-      overflow-y: auto;
-    }
-    .topbar {
-      display: flex;
       justify-content: space-between;
-      align-items: center;
-      margin-bottom: 1.5rem;
+      gap: 0.75rem;
+      padding: 0.75rem 1rem;
     }
-    .search {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 0.6rem 1rem;
-      color: var(--text);
-      width: 320px;
+    .logo { font-family: Syne, sans-serif; font-weight: 800; font-size: 1.125rem; line-height: 1; }
+    .logo span { color: var(--primary); }
+    .sub { margin: 0.25rem 0 0; color: var(--muted); font-size: 0.75rem; }
+    .tabs {
+      display: flex;
+      gap: 0.25rem;
+      overflow-x: auto;
+      padding: 0 0.75rem 0.5rem;
     }
-    .wallet-btn {
-      background: linear-gradient(135deg, #a855f7, #f97316);
-      color: white;
-      border: none;
-      padding: 0.65rem 1.2rem;
-      border-radius: 10px;
-      font-weight: 700;
-      cursor: pointer;
+    .tab, .btn, .btn-ghost {
+      height: 2.75rem;
+      border-radius: 999px;
+      border: 0;
+      padding: 0 0.9rem;
+      white-space: nowrap;
     }
-    .hero {
-      background: linear-gradient(135deg, #1a1028 0%, #2a1540 50%, #1a1028 100%);
+    .tab { background: transparent; color: var(--muted); }
+    .tab.active { background: var(--primary); color: var(--primary-fg); font-weight: 600; }
+    .btn { background: var(--primary); color: var(--primary-fg); font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; }
+    .btn-ghost { background: transparent; color: var(--fg); border: 1px solid var(--line); text-decoration: none; display: inline-flex; align-items: center; }
+    .btn-soft { background: var(--surface-2); color: var(--fg); font-weight: 600; }
+    main { padding: 1.25rem 1rem 2.5rem; }
+    h1, h2 { font-family: Syne, sans-serif; margin: 0.4rem 0 0; line-height: 1.05; }
+    h1 { font-size: 2rem; font-weight: 800; }
+    h2 { font-size: 1.35rem; }
+    .kicker { margin: 0; color: var(--teal); font-size: 0.75rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; }
+    .kicker.pink { color: var(--pink); }
+    .muted { color: var(--muted); }
+    .pink { color: var(--pink); }
+    .teal { color: var(--teal); }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--line);
       border-radius: var(--radius);
-      padding: 2rem;
-      margin-bottom: 1.5rem;
-      position: relative;
-      overflow: hidden;
-      border: 1px solid var(--border);
-    }
-    .hero h1 {
-      font-size: 2.2rem;
-      margin: 0 0 0.5rem;
-      font-weight: 800;
-      line-height: 1.1;
-    }
-    .hero h1 span {
-      background: linear-gradient(135deg, #f97316, #ec4899);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-    .hero p { color: var(--text-secondary); margin: 0 0 1.25rem; max-width: 420px; }
-    .hero-btn {
-      background: linear-gradient(135deg, #a855f7, #f97316);
-      color: white;
-      border: none;
-      padding: 0.75rem 1.5rem;
-      border-radius: 10px;
-      font-weight: 700;
-      cursor: pointer;
-    }
-    .section-title {
-      font-size: 0.75rem;
-      font-weight: 700;
-      letter-spacing: 0.1em;
-      color: var(--muted);
-      margin-bottom: 0.75rem;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-    .pinned-card {
-      background: var(--card);
-      border-radius: var(--radius);
-      padding: 1.25rem;
-      border: 1px solid var(--border);
-      display: flex;
-      gap: 1.25rem;
-      margin-bottom: 1.5rem;
-    }
-    .avatar {
-      width: 80px;
-      height: 80px;
-      border-radius: 12px;
-      background: linear-gradient(135deg, #a855f7, #f97316);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 2rem;
-      flex-shrink: 0;
-    }
-    .stats {
-      display: flex;
-      gap: 1.5rem;
-      margin-top: 0.75rem;
-      font-size: 0.85rem;
-    }
-    .stats div strong { display: block; color: white; }
-    .tournaments {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 1rem;
-    }
-    .tour-card {
-      background: var(--card);
-      border-radius: 12px;
-      overflow: hidden;
-      border: 1px solid var(--border);
-    }
-    .tour-img {
-      height: 100px;
-      background: linear-gradient(135deg, #3b0764, #7c2d12);
-    }
-    .tour-body { padding: 0.85rem; }
-    .badge {
-      font-size: 0.65rem;
-      font-weight: 700;
-      padding: 0.2rem 0.5rem;
-      border-radius: 4px;
-      display: inline-block;
-      margin-bottom: 0.4rem;
-    }
-    .badge.live { background: #22c55e; color: #052e16; }
-    .badge.upcoming { background: #f97316; color: #431407; }
-    .badge.soon { background: #ec4899; color: #500724; }
-    .admin-panel {
-      background: var(--card);
-      border-radius: 12px;
       padding: 1rem;
       margin-top: 1rem;
-      border: 1px dashed var(--accent);
     }
+    .card.dash { border-style: dashed; }
+    .row { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+    .market { padding: 0.75rem; }
+    .px { font-family: Syne, sans-serif; font-size: 1.25rem; font-weight: 700; margin: 0.25rem 0 0; }
     input, textarea {
       width: 100%;
-      padding: 0.6rem;
-      margin: 0.3rem 0;
-      background: #0c0a14;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      color: white;
+      margin-top: 0.5rem;
+      background: var(--bg);
+      color: var(--fg);
+      border: 1px solid var(--line);
+      border-radius: 0.75rem;
+      padding: 0.7rem 0.75rem;
     }
+    textarea { min-height: 5rem; resize: vertical; }
+    .split { display: flex; justify-content: space-between; gap: 0.75rem; align-items: center; }
+    iframe { width: 100%; height: 70vh; border: 0; background: #000; border-radius: var(--radius); margin-top: 1rem; }
     .hidden { display: none !important; }
-    @media (max-width: 900px) {
-      body { flex-direction: column; }
-      .sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--border); }
+    .err { color: var(--pink); }
+    @media (prefers-reduced-motion: reduce) {
+      * { transition: none !important; animation: none !important; }
     }
   </style>
 </head>
 <body>
-  <aside class="sidebar">
-    <div class="logo">
-      <div class="logo-icon">F</div>
+  <header>
+    <div class="bar">
       <div>
-        <div class="logo-text">FanArena</div>
-        <div class="logo-sub">FAN TOKEN PLATFORM</div>
+        <div class="logo">Fan<span>Arena</span></div>
+        <p class="sub">Live on Strike</p>
       </div>
+      <button id="walletBtn" class="btn" type="button">Connect wallet</button>
     </div>
-    <a class="nav-item active" href="#" data-tab="dashboard">Dashboard</a>
-    <a class="nav-item" href="#" data-tab="creators">Explore Creators</a>
-    <a class="nav-item" href="#" data-tab="tournaments">Tournaments</a>
-    <a class="nav-item" href="#" data-tab="tokens">Fan Tokens</a>
-    <a class="nav-item" href="#" data-tab="marketplace">Marketplace</a>
-    <a class="nav-item" href="#" data-tab="portfolio">My Portfolio</a>
-    <a class="nav-item" href="#" data-tab="rewards">Rewards</a>
-    <a class="nav-item" href="#" data-tab="leaderboard">Leaderboard</a>
-    <div class="sidebar-footer">
-      <strong>LEVEL UP YOUR FANDOM</strong>
-      <p style="font-size:0.75rem; color:var(--text-secondary); margin:0.4rem 0;">Hold. Vote. Earn. Win exclusive rewards.</p>
-      <button class="wallet-btn" style="width:100%; margin-top:0.5rem;" onclick="document.querySelector('[data-tab=rewards]').click()">View Rewards →</button>
-    </div>
-  </aside>
+    <nav class="tabs" id="tabs"></nav>
+  </header>
+  <main id="app"></main>
+  <script type="module">
+    const CEO = [
+      "0x76197edba4f22d96103b84743ed4e7309d432cec",
+      "0x1f8c218d09b37e15aa429f37ad934947b96bde2f",
+    ];
+    const STRIKE = "https://api.strikefinance.org";
+    const STRIKE_APP = "https://app.strikefinance.org";
+    const FEATURED = ["BTC-USD", "ETH-USD", "SOL-USD", "ADA-USD", "XRP-USD", "HYPE-USD"];
+    const TABS = [
+      ["dashboard", "Dashboard"],
+      ["creators", "Creators"],
+      ["tournaments", "Tournaments"],
+      ["tokens", "Fan Tokens"],
+      ["marketplace", "Marketplace"],
+      ["portfolio", "Portfolio"],
+      ["rewards", "Rewards"],
+      ["leaderboard", "Leaderboard"],
+    ];
+    const DEFAULT_CREATOR = {
+      name: "Andrei RPK",
+      bio: "Building games on Remix.",
+      remixUrl: "https://remix.gg/@andrei_rpk",
+    };
+    const DEFAULT_GAMES = [{
+      id: 1,
+      title: "Endgame Legends",
+      url: "https://remix.gg/g/endgame-legends",
+      description: "Choose your legendary hero and defend a ruined compound from an invading alien army. Co-op mode available.",
+    }];
 
-  <main class="main">
-    <div class="topbar">
-      <input class="search" placeholder="Search creators, tournaments...">
-      <div>
-        <span id="pointsDisplay" style="margin-right:0.75rem; color:var(--orange); font-weight:700;">Points: 0</span>
-        <span id="walletStatus" style="margin-right:0.75rem; color:var(--muted);">Not connected</span>
-        <button id="connectBtn" class="wallet-btn">Connect Wallet</button>
-        <button id="disconnectBtn" class="wallet-btn hidden" style="background:#333;">Disconnect</button>
-      </div>
-    </div>
+    const $ = (id) => document.getElementById(id);
+    const state = {
+      tab: "dashboard",
+      address: null,
+      busy: false,
+      walletError: "",
+      frame: "",
+      board: null,
+      loading: true,
+      builderCode: localStorage.getItem("fanarena.builder") || "",
+      link: null,
+      linkError: "",
+      linking: false,
+      adminStatus: "",
+      creator: load("fa_pinned", DEFAULT_CREATOR),
+      games: load("fa_games", DEFAULT_GAMES),
+    };
 
-    <div id="tab-dashboard">
-      <div class="hero">
-        <h1>BACK YOUR CREATORS.<br><span>OWN THE HYPE.</span></h1>
-        <p>Fan Tokens power your voice, unlock rewards, and turn fandom into real impact.</p>
-        <button class="hero-btn" onclick="document.querySelector('[data-tab=creators]').click()">Explore Creators →</button>
-      </div>
-
-      <div class="section-title">📌 PINNED CREATOR</div>
-      <div id="pinnedCard" class="pinned-card">
-        <div class="avatar">🎮</div>
-        <div style="flex:1;">
-          <h3 style="margin:0 0 0.25rem;">No pinned creator yet</h3>
-          <p style="color:var(--text-secondary); margin:0; font-size:0.9rem;">Unlock admin to set one.</p>
-        </div>
-      </div>
-
-      <div class="section-title">🎮 CREATOR TOP GAMES</div>
-      <div id="gamesContainer" class="tournaments"></div>
-
-      <div class="section-title" style="margin-top:1.5rem;">🏆 TOURNAMENTS</div>
-      <div class="tournaments">
-        <p style="color:var(--muted); grid-column:1/-1;">No tournaments yet. Coming soon.</p>
-      </div>
-    </div>
-
-    <div id="tab-creators" class="hidden">
-      <div class="section-title">EXPLORE CREATORS</div>
-      <div id="creatorsList" class="tournaments"></div>
-    </div>
-
-    <div id="tab-tournaments" class="hidden">
-      <div class="section-title">🏆 TOURNAMENTS</div>
-      <div id="tournamentGate" style="background:var(--card); border-radius:12px; padding:1.5rem; border:1px solid var(--border); text-align:center;">
-        <h3 style="margin:0 0 0.5rem;">Need 2 Points to Join</h3>
-        <p style="color:var(--text-secondary); margin:0 0 1rem;">Earn points by trading on Strike.</p>
-        <p id="currentPointsMsg" style="color:var(--orange); font-weight:700;">You have 0 points</p>
-        <button class="wallet-btn" onclick="document.querySelector('[data-tab=rewards]').click()">Earn Points →</button>
-      </div>
-      <div id="tournamentContent" class="hidden" style="margin-top:1rem;">
-        <p style="color:var(--muted);">No tournaments yet. Coming soon.</p>
-      </div>
-    </div>
-
-    <div id="tab-tokens" class="hidden">
-      <h2>Fan Tokens</h2>
-      <p style="color:var(--muted)">Fan token details will appear here.</p>
-    </div>
-
-    <div id="tab-marketplace" class="hidden">
-      <h2>Marketplace</h2>
-      <p style="color:var(--muted)">Coming soon.</p>
-    </div>
-
-    <div id="tab-portfolio" class="hidden">
-      <h2>My Portfolio</h2>
-      <p style="color:var(--muted)">Connect wallet to see your portfolio.</p>
-    </div>
-
-    <div id="tab-rewards" class="hidden">
-      <div class="section-title">⚡ EARN POINTS — LIVE STRIKE INTEGRATION</div>
-      <div style="background:var(--card); border-radius:12px; padding:1.5rem; border:1px solid var(--border); margin-bottom:1rem;">
-        <h3 style="margin:0 0 0.5rem;">Trade on Strike to Earn Points</h3>
-        <p style="color:var(--text-secondary); margin:0 0 1rem;">Trade perps on Strike Finance. Each qualifying trade earns points toward tournaments & predictions.</p>
-        <div style="display:flex; gap:1rem; align-items:center; flex-wrap:wrap; margin-bottom:1rem;">
-          <a href="https://app.strikefinance.org" target="_blank" class="wallet-btn" style="text-decoration:none; display:inline-block;">Trade on Strike →</a>
-          <button id="refreshStrikeBtn" class="wallet-btn" style="background:#333;">Refresh Data</button>
-        </div>
-        <p id="pointsStatus" style="margin:0.5rem 0; color:var(--orange); font-weight:700;">Current points: 0</p>
-        <p style="font-size:0.8rem; color:var(--muted);">Demo: Click “Claim Trade Points” after trading on Strike to record activity.</p>
-        <button id="claimTradeBtn" class="wallet-btn" style="margin-top:0.5rem;">Claim Trade Points (+1)</button>
-      </div>
-
-      <div class="section-title">LIVE STRIKE DATA</div>
-      <div id="strikeData" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:1rem; margin-bottom:1.5rem;">
-        <div class="tour-card" style="padding:1rem;">
-          <div style="font-size:0.75rem; color:var(--muted);">BTC Mark Price</div>
-          <div id="btcPrice" style="font-size:1.25rem; font-weight:700;">Loading...</div>
-        </div>
-        <div class="tour-card" style="padding:1rem;">
-          <div style="font-size:0.75rem; color:var(--muted);">ETH Mark Price</div>
-          <div id="ethPrice" style="font-size:1.25rem; font-weight:700;">Loading...</div>
-        </div>
-        <div class="tour-card" style="padding:1rem;">
-          <div style="font-size:0.75rem; color:var(--muted);">Top Copy Traders</div>
-          <div id="copyCount" style="font-size:1.25rem; font-weight:700;">Loading...</div>
-        </div>
-      </div>
-      <div id="strikeTraders" style="font-size:0.85rem; color:var(--text-secondary);"></div>
-
-      <div class="section-title" style="margin-top:1.5rem;">REWARDS</div>
-      <p style="color:var(--muted)">More rewards coming soon.</p>
-    </div>
-
-    <div id="tab-leaderboard" class="hidden">
-      <h2>Leaderboard</h2>
-      <p style="color:var(--muted)">Leaderboard coming soon.</p>
-    </div>
-
-    <!-- Admin -->
-    <section style="margin-top:2rem;">
-      <h2 style="font-size:1rem;">Owner Access</h2>
-      <p style="font-size:0.85rem; color:var(--muted);">Enter security key (demo: <code>fanarena-owner-2026</code>)</p>
-      <input type="password" id="securityKey" placeholder="Security key">
-      <button id="unlockAdmin" class="wallet-btn">Unlock Admin</button>
-      <div id="adminPanel" class="admin-panel hidden">
-        <h3>Set Pinned Creator</h3>
-        <input id="pinName" placeholder="Creator Name">
-        <input id="pinBio" placeholder="Short Bio">
-        <input id="pinRemix" placeholder="Remix Profile URL">
-        <button id="setPinnedBtn" class="wallet-btn">Set Pinned</button>
-        <hr style="border-color:var(--border); margin:1rem 0;">
-        <h3>Add Top Game</h3>
-        <input id="gameTitle" placeholder="Game Title">
-        <input id="gameUrl" placeholder="Game URL">
-        <input id="gameDesc" placeholder="Description">
-        <button id="addGameBtn" class="wallet-btn">Add Game</button>
-        <div id="adminGamesList" style="margin-top:0.5rem; font-size:0.8rem;"></div>
-        <div id="adminStatus"></div>
-      </div>
-    </section>
-  </main>
-
-  <script>
-    // Points system
-    function getPoints() {
-      return parseInt(localStorage.getItem('fa_points') || '0', 10);
-    }
-    function setPoints(n) {
-      localStorage.setItem('fa_points', n);
-      updatePointsUI();
-    }
-    function updatePointsUI() {
-      const pts = getPoints();
-      document.getElementById('pointsDisplay').textContent = 'Points: ' + pts;
-      const status = document.getElementById('pointsStatus');
-      if (status) status.textContent = 'Current points: ' + pts;
-      const msg = document.getElementById('currentPointsMsg');
-      if (msg) msg.textContent = 'You have ' + pts + ' points';
-      // Gate tournaments
-      const gate = document.getElementById('tournamentGate');
-      const content = document.getElementById('tournamentContent');
-      if (gate && content) {
-        if (pts >= 2) {
-          gate.classList.add('hidden');
-          content.classList.remove('hidden');
-        } else {
-          gate.classList.remove('hidden');
-          content.classList.add('hidden');
-        }
+    function load(key, fallback) {
+      try {
+        const raw = localStorage.getItem(key);
+        return raw ? JSON.parse(raw) : fallback;
+      } catch {
+        return fallback;
       }
     }
-    document.getElementById('claimTradeBtn')?.addEventListener('click', () => {
-      setPoints(getPoints() + 1);
-      alert('Trade points claimed! +1 Point');
-    });
+    function save(key, value) {
+      localStorage.setItem(key, JSON.stringify(value));
+    }
+    function esc(value) {
+      return String(value ?? "").replace(/[&<>"']/g, (c) => ({
+        "&": "\u0026amp;",
+        "<": "\u0026lt;",
+        ">": "\u0026gt;",
+        '"': "\u0026quot;",
+        "'": "\u0026#39;",
+      })[c]);
+    }
 
-    // Live Strike data
-    async function loadStrikeData() {
+    function short(address) {
+      return address ? address.slice(0, 6) + "…" + address.slice(-4) : "";
+    }
+    function isCeo(address) {
+      return !!address && CEO.some((w) => w.toLowerCase() === address.toLowerCase());
+    }
+    function money(value, digits = 0) {
+      const n = Number(value);
+      if (!Number.isFinite(n)) return "—";
+      return n.toLocaleString(undefined, { style: "currency", currency: "USD", maximumFractionDigits: digits, minimumFractionDigits: digits });
+    }
+    function price(value) {
+      const n = Number(value);
+      if (!Number.isFinite(n)) return "—";
+      const digits = n >= 1000 ? 2 : n >= 1 ? 4 : 6;
+      return n.toLocaleString(undefined, { style: "currency", currency: "USD", maximumFractionDigits: digits });
+    }
+    function funding(value) {
+      const n = Number(value);
+      return Number.isFinite(n) ? (n * 100).toFixed(4) + "%" : "—";
+    }
+    function percent(value) {
+      const n = Number(value);
+      if (!Number.isFinite(n)) return "—";
+      const shown = Math.abs(n) <= 2 ? n * 100 : n;
+      return (shown > 0 ? "+" : "") + shown.toFixed(1) + "%";
+    }
+    function httpsOnly(url) {
       try {
-        // Mark prices
-        const priceRes = await fetch('https://api.strikefinance.org/price/v2/markPrice');
-        if (priceRes.ok) {
-          const prices = await priceRes.json();
-          const btc = prices.find(p => p.symbol === 'BTC-USD' || p.s === 'BTC-USD');
-          const eth = prices.find(p => p.symbol === 'ETH-USD' || p.s === 'ETH-USD');
-          if (btc) document.getElementById('btcPrice').textContent = '$' + (parseFloat(btc.markPrice || btc.p || 0)).toLocaleString();
-          if (eth) document.getElementById('ethPrice').textContent = '$' + (parseFloat(eth.markPrice || eth.p || 0)).toLocaleString();
-        }
-      } catch (e) {
-        document.getElementById('btcPrice').textContent = '—';
-        document.getElementById('ethPrice').textContent = '—';
+        const parsed = new URL(url);
+        return parsed.protocol === "https:" ? parsed.href : "";
+      } catch {
+        return "";
       }
+    }
 
+    function eth() { return window.ethereum || null; }
+
+    async function connect() {
+      state.walletError = "";
+      const provider = eth();
+      if (!provider) {
+        state.walletError = "No wallet in this browser. Open FanArena in Rabby or MetaMask.";
+        render();
+        return;
+      }
+      state.busy = true;
+      render();
       try {
-        // Copy traders
-        const tradersRes = await fetch('https://api.strikefinance.org/v2/copy/discover?limit=5&platform=strike');
-        if (tradersRes.ok) {
-          const data = await tradersRes.json();
-          const list = data.data || data.traders || [];
-          document.getElementById('copyCount').textContent = list.length + ' active';
-          const container = document.getElementById('strikeTraders');
-          if (list.length) {
-            container.innerHTML = '<strong>Top Strike Traders:</strong><br>' + list.slice(0, 3).map(t => 
-              `• ${t.nickname || t.address?.slice(0,8) || 'Trader'} — Score: ${t.copy_score || '—'}`
-            ).join('<br>');
-          } else {
-            container.textContent = 'No public trader data available.';
+        const accounts = await provider.request({ method: "eth_requestAccounts" });
+        state.address = accounts[0] || null;
+        readLink();
+      } catch (err) {
+        state.walletError = err && err.code === 4001 ? "Connection rejected." : "Could not connect the wallet.";
+      } finally {
+        state.busy = false;
+        render();
+      }
+    }
+
+    async function disconnect() {
+      const provider = eth();
+      try {
+        await provider?.request({ method: "wallet_revokePermissions", params: [{ eth_accounts: {} }] });
+      } catch { /* some wallets cannot revoke */ }
+      state.address = null;
+      state.link = null;
+      if (state.tab === "admin") state.tab = "dashboard";
+      render();
+    }
+
+    async function signMessage(message, account) {
+      const provider = eth();
+      if (!provider) throw new Error("No wallet in this browser.");
+      const hex = "0x" + [...new TextEncoder().encode(message)].map((b) => b.toString(16).padStart(2, "0")).join("");
+      try {
+        return await provider.request({ method: "personal_sign", params: [hex, account] });
+      } catch (err) {
+        if (err && err.code === 4001) throw new Error("Signature rejected.");
+        return provider.request({ method: "personal_sign", params: [message, account] });
+      }
+    }
+
+    function readLink() {
+      state.link = null;
+      if (!state.address) return;
+      state.link = load("fanarena.strike." + state.address.toLowerCase(), null);
+    }
+
+    async function linkStrike() {
+      state.linkError = "";
+      if (!state.address) {
+        state.linkError = "Connect a wallet first.";
+        render();
+        return;
+      }
+      const code = state.builderCode.trim();
+      if (code.length < 2) {
+        state.linkError = "Paste the builder code from your Strike dashboard.";
+        render();
+        return;
+      }
+      state.linking = true;
+      render();
+      try {
+        const ed = await import("https://esm.sh/@noble/ed25519@3.2.0");
+        const keys = await ed.keygenAsync();
+        const publicKey = [...keys.publicKey].map((b) => b.toString(16).padStart(2, "0")).join("");
+        const requested = await fetch(STRIKE + "/auth/builder/request-signature", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            address: state.address,
+            chain: "ethereum",
+            code,
+            fee_share_bps: 50,
+            public_key: publicKey,
+          }),
+        }).then((r) => r.json());
+        if (!requested.message_to_sign || !requested.nonce) {
+          throw new Error(requested.error || "Strike refused the builder link.");
+        }
+        const signature = await signMessage(requested.message_to_sign, state.address);
+        const verified = await fetch(STRIKE + "/auth/builder/verify-signature", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ nonce: requested.nonce, wallet_signature: signature }),
+        }).then((r) => r.json());
+        if (!verified.account_id) throw new Error(verified.error || "Strike did not accept the signature.");
+        state.link = {
+          accountId: verified.account_id,
+          builderCode: verified.builder_code || code,
+          feeShareBps: verified.fee_share_bps ?? 50,
+        };
+        localStorage.setItem("fanarena.builder", code);
+        save("fanarena.strike." + state.address.toLowerCase(), state.link);
+      } catch (err) {
+        state.linkError = err instanceof Error ? err.message : "Could not link Strike.";
+      } finally {
+        state.linking = false;
+        render();
+      }
+    }
+
+    async function loadBoard() {
+      state.loading = true;
+      try {
+        const [pricesRes, tradersRes, vaultsRes] = await Promise.allSettled([
+          fetch(STRIKE + "/price/v2/premiumIndex").then((r) => r.json()),
+          fetch(STRIKE + "/v2/copy/discover?platform=strike&limit=8&sort=pnl_30d&order=desc").then((r) => r.json()),
+          fetch(STRIKE + "/v2/vaults?limit=4").then((r) => r.json()),
+        ]);
+        const markets = [];
+        if (pricesRes.status === "fulfilled" && Array.isArray(pricesRes.value)) {
+          const by = new Map(pricesRes.value.map((row) => [row.symbol, row]));
+          for (const symbol of FEATURED) {
+            const row = by.get(symbol);
+            if (!row) continue;
+            markets.push({ symbol, markPrice: String(row.markPrice), fundingRate: String(row.fundingRate || "0") });
           }
         }
-      } catch (e) {
-        document.getElementById('copyCount').textContent = '—';
-        document.getElementById('strikeTraders').textContent = 'Unable to load trader data.';
+        const traders = tradersRes.status === "fulfilled" && Array.isArray(tradersRes.value?.items)
+          ? tradersRes.value.items.map((row) => ({
+              address: row.blockchain_address,
+              equity: String(row.account_value || "0"),
+              pnl30d: String(row.pnl?.["30d"] || "0"),
+              roi30d: String(row.roi?.["30d"] || "0"),
+            })).filter((row) => row.address)
+          : [];
+        const vaults = vaultsRes.status === "fulfilled" && Array.isArray(vaultsRes.value?.vaults)
+          ? (vaultsRes.value.vaults || []).filter((row) => !row.status || row.status === "active").slice(0, 4).map((row) => ({
+              name: row.name || "Vault",
+              equity: String(row.equity || "0"),
+              apr: String(row.apr || "0"),
+              depositors: Number(row.depositors || 0),
+            }))
+          : [];
+        state.board = {
+          markets,
+          traders,
+          vaults,
+          error: markets.length + traders.length + vaults.length === 0 ? "Strike is unreachable right now." : "",
+        };
+      } catch {
+        state.board = { markets: [], traders: [], vaults: [], error: "Strike is unreachable right now." };
+      } finally {
+        state.loading = false;
+        render();
       }
     }
 
-    document.getElementById('refreshStrikeBtn')?.addEventListener('click', loadStrikeData);
+    function card(inner, extra = "") {
+      return `<article class="card ${extra}">${inner}</article>`;
+    }
 
-    // Tab switching
-    document.querySelectorAll('.nav-item').forEach(item => {
-      item.addEventListener('click', e => {
-        e.preventDefault();
-        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-        item.classList.add('active');
-        const tab = item.dataset.tab;
-        document.querySelectorAll('[id^="tab-"]').forEach(el => el.classList.add('hidden'));
-        const target = document.getElementById('tab-' + tab);
-        if (target) target.classList.remove('hidden');
+    function marketsHtml() {
+      const board = state.board;
+      if (state.loading) {
+        return `<div class="grid">${Array.from({ length: 6 }, () => `<div class="card market" style="height:6rem"></div>`).join("")}</div>`;
+      }
+      const cards = (board?.markets || []).map((m) => card(`
+        <p class="muted" style="margin:0;font-size:.75rem">${esc(m.symbol.replace("-USD", ""))}</p>
+        <p class="px">${esc(price(m.markPrice))}</p>
+        <p class="muted" style="margin:.25rem 0 0;font-size:.75rem">Funding ${esc(funding(m.fundingRate))}</p>
+      `, "market")).join("");
+      const vaults = (board?.vaults || []).map((v) => `
+        <div class="card split">
+          <div>
+            <strong>${esc(v.name)}</strong>
+            <p class="muted" style="margin:.2rem 0 0;font-size:.75rem">${esc(money(v.equity))} · ${esc(v.depositors)} depositors</p>
+          </div>
+          <span class="${Number(v.apr) >= 0 ? "teal" : "pink"}">${esc(percent(v.apr))}</span>
+        </div>`).join("");
+      const linked = state.link
+        ? `<p class="teal">Linked · ${esc(state.link.builderCode || "builder")} · ${esc(short(state.link.accountId))}</p>`
+        : "";
+      return `
+        ${board?.error ? `<p class="err">${esc(board.error)}</p>` : ""}
+        <div class="grid">${cards}</div>
+        <div class="row"><a class="btn" href="${STRIKE_APP}" target="_blank" rel="noreferrer">Trade on Strike</a></div>
+        ${card(`
+          <h2>Link your builder code</h2>
+          <p class="muted">This signs Strike’s message with your wallet. Fee cap is 0.50%. FanArena cannot withdraw. Points still wait for a confirmed fill.</p>
+          ${linked}
+          <label class="muted" for="builder">Builder code</label>
+          <input id="builder" value="${esc(state.builderCode)}" placeholder="From the Strike dashboard" autocomplete="off" spellcheck="false">
+          <div class="row"><button class="btn btn-soft" id="linkBtn" type="button" ${state.linking || !state.address ? "disabled" : ""}>${state.linking ? "Waiting for signature…" : state.address ? "Sign and link Strike" : "Connect wallet to link"}</button></div>
+          ${state.linkError ? `<p class="err">${esc(state.linkError)}</p>` : ""}
+        `)}
+        ${vaults ? `<h2 style="margin-top:1rem">Vaults</h2>${vaults}` : ""}
+      `;
+    }
+
+    function frameHtml(url, title) {
+      const safe = httpsOnly(url);
+      if (!safe || state.frame !== url) return "";
+      return `<iframe title="${esc(title)}" src="${esc(safe)}"></iframe>`;
+    }
+
+    function dashboard() {
+      const g = state.games[0];
+      const rest = state.games.slice(1).map((game) => card(`
+        <h2>${esc(game.title)}</h2>
+        <p class="muted">${esc(game.description)}</p>
+        <div class="row"><a class="teal" href="${esc(httpsOnly(game.url))}" target="_blank" rel="noreferrer">Open game</a></div>
+      `)).join("");
+      return `
+        <p class="kicker">Remix creators</p>
+        <h1>Call the board.</h1>
+        <p class="muted">FanArena is the creator floor. Profiles and games stay on Remix. Perps run on Strike. Points do not move because someone opened a link.</p>
+        ${card(`
+          <p class="kicker pink">Pinned creator</p>
+          <h2>${esc(state.creator.name)}</h2>
+          <p class="muted">${esc(state.creator.bio)}</p>
+          <div class="row">
+            <button class="btn" type="button" data-frame="${esc(state.creator.remixUrl)}">${state.frame === state.creator.remixUrl ? "Close profile" : "Open profile"}</button>
+            <a class="btn-ghost" href="${esc(state.creator.remixUrl)}" target="_blank" rel="noreferrer">remix.gg</a>
+          </div>
+        `)}
+        ${g ? card(`
+          <p class="kicker">Top game</p>
+          <h2>${esc(g.title)}</h2>
+          <p class="muted">${esc(g.description || "Playable on Remix.")}</p>
+          <div class="row">
+            <button class="btn btn-soft" type="button" data-frame="${esc(g.url)}">${state.frame === g.url ? "Close game" : "Open game"}</button>
+            <a class="btn-ghost" href="${esc(g.url)}" target="_blank" rel="noreferrer">Play on Remix</a>
+          </div>
+        `) : ""}
+        ${rest}
+        ${frameHtml(state.frame, "Remix")}
+        ${card(`
+          <p class="kicker" style="color:var(--muted)">Tournaments</p>
+          <h2>No live boards</h2>
+          <p class="muted">Entry will cost 2 points from confirmed Strike fills. Nothing is posted yet, and opening Strike does not mint those points.</p>
+          <div class="row"><button class="btn-ghost" type="button" data-tab="tournaments">Open tournaments</button></div>
+        `, "dash")}
+      `;
+    }
+
+    function creators() {
+      return `
+        <p class="kicker">Explore</p>
+        <h1>Creators</h1>
+        <p class="muted">Pinned from the admin panel. More creators are not invented.</p>
+        ${card(`
+          <h2>${esc(state.creator.name)}</h2>
+          <p class="muted">${esc(state.creator.bio)}</p>
+          <div class="row">
+            <button class="btn" type="button" data-frame="${esc(state.creator.remixUrl)}">${state.frame === state.creator.remixUrl ? "Close profile" : "View profile"}</button>
+            <a class="btn-ghost" href="${esc(state.creator.remixUrl)}" target="_blank" rel="noreferrer">remix.gg</a>
+          </div>
+        `)}
+        ${frameHtml(state.frame, "Remix profile")}
+      `;
+    }
+
+    function tournaments() {
+      return `
+        <p class="kicker">Boards</p>
+        <h1>Tournaments</h1>
+        ${card(`
+          <h2>Need 2 points to join</h2>
+          <p class="muted">Earn them from confirmed Strike fills, not from opening the app.</p>
+          <p class="teal" style="font-weight:600">You have 0 points</p>
+        `)}
+      `;
+    }
+
+    function tokens() {
+      return `
+        <p class="kicker">Holdings</p>
+        <h1>Fan Tokens</h1>
+        <p class="muted">No fan token is listed yet. Strike markets on Rewards are perps, not creator tokens.</p>
+      `;
+    }
+
+    function marketplace() {
+      return `
+        <p class="kicker">Exchange</p>
+        <h1>Marketplace</h1>
+        <p class="muted">No listings yet. Nothing here is for sale.</p>
+      `;
+    }
+
+    function portfolio() {
+      if (!state.address) {
+        return `
+          <p class="kicker">Wallet</p>
+          <h1>Portfolio</h1>
+          ${card(`
+            <p class="muted">Connect a wallet to attach this portfolio to an address.</p>
+            <div class="row"><button class="btn" id="connectInline" type="button">Connect wallet</button></div>
+          `)}
+        `;
+      }
+      return `
+        <p class="kicker">Wallet</p>
+        <h1>Portfolio</h1>
+        ${card(`
+          <strong>${esc(short(state.address))}</strong>
+          <p class="muted">Points: 0</p>
+          <p class="muted">Fan tokens: none listed</p>
+          <p class="muted">${state.link ? "Strike builder linked · " + esc(state.link.builderCode || "code") : "Strike builder not linked"}</p>
+        `)}
+      `;
+    }
+
+    function rewards() {
+      return `
+        <p class="kicker">Points</p>
+        <h1>0</h1>
+        <p class="muted">${state.address ? esc(short(state.address)) + " has no confirmed Strike fills through FanArena." : "Connect a wallet to attach points to a real address."}</p>
+        ${card(`
+          <strong>How a point is earned</strong>
+          <ol class="muted">
+            <li>Connect the same Ethereum wallet you trade with.</li>
+            <li>Link a Strike builder code and sign their message.</li>
+            <li>A fill has to come back from Strike. Opening the app does not count.</li>
+          </ol>
+          <p class="muted">${state.link ? "Builder " + esc(state.link.builderCode || "code") + " is linked. Fills are not credited yet because FanArena does not invent them." : "No builder is linked for this wallet."}</p>
+        `)}
+        <p class="kicker" style="margin-top:1.25rem">Strike perps</p>
+        <h2>Markets</h2>
+        <p class="muted">Prices are live from Strike. Trading happens in their app until your builder code is linked. Fan tokens are not listed here.</p>
+        ${marketsHtml()}
+      `;
+    }
+
+    function leaderboard() {
+      const rows = state.loading
+        ? Array.from({ length: 5 }, () => `<div class="card" style="height:4rem"></div>`).join("")
+        : (state.board?.traders || []).map((t, i) => {
+            const pnl = Number(t.pnl30d);
+            return `<div class="card split">
+              <div><strong>${i + 1}. ${esc(short(t.address))}</strong><p class="muted" style="margin:.2rem 0 0;font-size:.75rem">Equity ${esc(money(t.equity))}</p></div>
+              <div style="text-align:right"><strong class="${pnl >= 0 ? "teal" : "pink"}">${pnl >= 0 ? "+" : ""}${esc(money(t.pnl30d))}</strong><p class="muted" style="margin:.2rem 0 0;font-size:.75rem">${esc(percent(t.roi30d))} ROI</p></div>
+            </div>`;
+          }).join("") || `<p class="muted">No public Strike traders came back.</p>`;
+      return `
+        <p class="kicker">Public board</p>
+        <h1>Leaderboard</h1>
+        <p class="muted">30-day PnL from Strike’s public copy list. Not a fan-points ranking.</p>
+        ${state.board?.error ? `<p class="err">${esc(state.board.error)}</p>` : ""}
+        ${rows}
+      `;
+    }
+
+    function admin() {
+      const games = state.games.map((g) => `
+        <div class="split" style="margin-top:.5rem">
+          <span>${esc(g.title)}</span>
+          <button class="btn-ghost" type="button" data-remove="${esc(g.id)}" style="color:var(--pink)">Remove</button>
+        </div>`).join("");
+      return `
+        <p class="kicker">CEO</p>
+        <h1>Admin</h1>
+        <p class="muted">Both CEO wallets have the same control. In this single file, saves stay in this browser. There is no password.</p>
+        ${card(`
+          <h2>Pinned creator</h2>
+          <input id="pinName" value="${esc(state.creator.name)}" placeholder="Creator name">
+          <textarea id="pinBio" placeholder="Short bio">${esc(state.creator.bio)}</textarea>
+          <input id="pinUrl" value="${esc(state.creator.remixUrl)}" placeholder="https://remix.gg/@name">
+          <div class="row"><button class="btn" id="saveCreator" type="button">Save creator</button></div>
+        `)}
+        ${card(`
+          <h2>Top games</h2>
+          ${games}
+          <input id="gameTitle" placeholder="Game title">
+          <input id="gameUrl" placeholder="https://remix.gg/g/…">
+          <input id="gameDesc" placeholder="Description">
+          <div class="row"><button class="btn btn-soft" id="addGame" type="button">Add game</button></div>
+        `)}
+        ${state.adminStatus ? `<p class="muted">${esc(state.adminStatus)}</p>` : ""}
+      `;
+    }
+
+    const views = { dashboard, creators, tournaments, tokens, marketplace, portfolio, rewards, leaderboard, admin };
+
+    function render() {
+      const ceo = isCeo(state.address);
+      const tabs = ceo ? TABS.concat([["admin", "Admin"]]) : TABS;
+      $("tabs").innerHTML = tabs.map(([id, label]) =>
+        `<button class="tab${state.tab === id ? " active" : ""}" type="button" data-tab="${id}">${label}</button>`
+      ).join("");
+      const btn = $("walletBtn");
+      btn.textContent = state.busy ? "Waiting…" : state.address ? (ceo ? "CEO " : "") + short(state.address) : "Connect wallet";
+      btn.className = state.address ? "btn-ghost" : "btn";
+      btn.disabled = state.busy && !state.address;
+      $("app").innerHTML = (state.walletError ? `<p class="card err">${esc(state.walletError)}</p>` : "") + (views[state.tab] || dashboard)();
+      bind();
+    }
+
+    function bind() {
+      $("walletBtn").onclick = () => (state.address ? disconnect() : connect());
+      document.querySelectorAll("[data-tab]").forEach((el) => {
+        el.onclick = () => { state.tab = el.dataset.tab; render(); };
       });
-    });
-    let isAdmin = false;
+      document.querySelectorAll("[data-frame]").forEach((el) => {
+        el.onclick = () => {
+          state.frame = state.frame === el.dataset.frame ? "" : el.dataset.frame;
+          render();
+        };
+      });
+      $("connectInline") && ($("connectInline").onclick = connect);
+      const builder = $("builder");
+      if (builder) builder.oninput = () => { state.builderCode = builder.value; };
+      $("linkBtn") && ($("linkBtn").onclick = linkStrike);
+      $("saveCreator") && ($("saveCreator").onclick = () => {
+        const name = $("pinName").value.trim();
+        const remixUrl = $("pinUrl").value.trim();
+        if (!name || !httpsOnly(remixUrl)) {
+          state.adminStatus = "Name and an https profile URL are required.";
+          render();
+          return;
+        }
+        state.creator = { name, bio: $("pinBio").value.trim(), remixUrl };
+        save("fa_pinned", state.creator);
+        state.adminStatus = "Pinned creator saved in this browser.";
+        render();
+      });
+      $("addGame") && ($("addGame").onclick = () => {
+        const title = $("gameTitle").value.trim();
+        const url = $("gameUrl").value.trim();
+        if (!title || !httpsOnly(url)) {
+          state.adminStatus = "Title and an https game URL are required.";
+          render();
+          return;
+        }
+        state.games.push({ id: Date.now(), title, url, description: $("gameDesc").value.trim() });
+        save("fa_games", state.games);
+        state.adminStatus = "Game added in this browser.";
+        render();
+      });
+      document.querySelectorAll("[data-remove]").forEach((el) => {
+        el.onclick = () => {
+          state.games = state.games.filter((g) => String(g.id) !== el.dataset.remove);
+          save("fa_games", state.games);
+          state.adminStatus = "Game removed in this browser.";
+          render();
+        };
+      });
+    }
 
-    document.getElementById('unlockAdmin').onclick = () => {
-      if (document.getElementById('securityKey').value === OWNER_KEY) {
-        isAdmin = true;
-        document.getElementById('adminPanel').classList.remove('hidden');
-        alert("Admin unlocked");
-      } else alert("Invalid key");
-    };
-
-    // Default pinned creator + top game
-    const DEFAULT_PINNED = {
-      name: "Andrei RPK",
-      bio: "Building games on @RemixGG_ 🎮 ➡️ https://remix.gg/@andrei_rpk",
-      remix: "https://remix.gg/@andrei_rpk"
-    };
-    const DEFAULT_GAMES = [
-      {
-        title: "Endgame Legends",
-        url: "https://remix.gg/g/endgame-legends",
-        desc: "Choose your legendary hero and defend a ruined compound from an invading alien army. Co-op mode available."
+    (async function boot() {
+      const provider = eth();
+      if (provider) {
+        try {
+          const accounts = await provider.request({ method: "eth_accounts" });
+          state.address = accounts[0] || null;
+          readLink();
+        } catch { /* ignore */ }
+        provider.on?.("accountsChanged", (accounts) => {
+          state.address = accounts[0] || null;
+          readLink();
+          if (!isCeo(state.address) && state.tab === "admin") state.tab = "dashboard";
+          render();
+        });
       }
-    ];
-
-    function getPinned() {
-      const stored = localStorage.getItem('fa_pinned');
-      if (stored) return JSON.parse(stored);
-      localStorage.setItem('fa_pinned', JSON.stringify(DEFAULT_PINNED));
-      return DEFAULT_PINNED;
-    }
-    function getGames() {
-      const stored = localStorage.getItem('fa_games');
-      if (stored) return JSON.parse(stored);
-      localStorage.setItem('fa_games', JSON.stringify(DEFAULT_GAMES));
-      return DEFAULT_GAMES;
-    }
-
-    function renderPinned() {
-      const d = getPinned();
-      const el = document.getElementById('pinnedCard');
-      if (!d) {
-        el.innerHTML = `<div class="avatar">🎮</div><div><h3 style="margin:0">No pinned creator</h3><p style="color:var(--text-secondary);margin:0">Set one in admin.</p></div>`;
-        return;
-      }
-      el.innerHTML = `
-        <div class="avatar">🎮</div>
-        <div style="flex:1">
-          <h3 style="margin:0 0 0.25rem">${d.name} <span style="color:#22c55e">●</span></h3>
-          <p style="color:var(--text-secondary); margin:0 0 0.5rem; font-size:0.9rem">${d.bio}</p>
-          <div class="stats">
-            <div><strong>—</strong>Followers</div>
-            <div><strong>—</strong>Holders</div>
-          </div>
-          <div style="margin-top:0.75rem">
-            <button class="wallet-btn" onclick="window.open('${d.remix}','_blank')">View Profile</button>
-          </div>
-        </div>
-      `;
-    }
-
-    function renderCreators() {
-      const pinned = getPinned();
-      const list = document.getElementById('creatorsList');
-      if (!list) return;
-      if (!pinned) {
-        list.innerHTML = '<p style="color:var(--muted)">No creators yet.</p>';
-        return;
-      }
-      list.innerHTML = `
-        <div class="tour-card">
-          <div class="tour-img" style="background:linear-gradient(135deg,#4c1d95,#9a3412);"></div>
-          <div class="tour-body">
-            <div style="font-weight:700">${pinned.name}</div>
-            <div style="font-size:0.8rem; color:var(--text-secondary); margin:0.3rem 0">${pinned.bio}</div>
-            <button class="wallet-btn" style="margin-top:0.5rem; font-size:0.8rem;" onclick="window.open('${pinned.remix}','_blank')">View Profile</button>
-          </div>
-        </div>
-      `;
-    }
-      const games = getGames();
-      const c = document.getElementById('gamesContainer');
-      if (!games.length) {
-        c.innerHTML = '<p style="color:var(--muted)">No games added yet.</p>';
-        return;
-      }
-      c.innerHTML = games.map(g => `
-        <div class="tour-card">
-          <div class="tour-img" style="background:linear-gradient(135deg,#4c1d95,#9a3412);"></div>
-          <div class="tour-body">
-            <span class="badge live">LIVE</span>
-            <div style="font-weight:700">${g.title}</div>
-            <div style="font-size:0.8rem; color:var(--text-secondary); margin:0.3rem 0">${g.desc || ''}</div>
-            <div style="margin-top:0.5rem; position:relative; width:100%; padding-top:56.25%; border-radius:8px; overflow:hidden;">
-              <iframe src="${g.url}?embed=1" style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;" allow="fullscreen;autoplay" allowfullscreen loading="lazy"></iframe>
-            </div>
-            <a href="${g.url}" target="_blank" style="color:#a855f7; font-size:0.8rem; display:inline-block; margin-top:0.5rem">Open full game →</a>
-          </div>
-        </div>
-      `).join('');
-    }
-
-    function renderAdminGames() {
-      const games = getGames();
-      const list = document.getElementById('adminGamesList');
-      if (!list) return;
-      list.innerHTML = games.map((g,i) => `<div>${g.title} <button onclick="removeGame(${i})" style="background:#333;color:white;border:none;padding:0.2rem 0.4rem;border-radius:4px;cursor:pointer">X</button></div>`).join('');
-    }
-
-    window.removeGame = i => {
-      const g = getGames(); g.splice(i,1);
-      localStorage.setItem('fa_games', JSON.stringify(g));
-      renderGames(); renderAdminGames();
-    };
-
-    document.getElementById('setPinnedBtn').onclick = () => {
-      if (!isAdmin) return;
-      const name = document.getElementById('pinName').value.trim();
-      const bio = document.getElementById('pinBio').value.trim();
-      const remix = document.getElementById('pinRemix').value.trim();
-      if (!name || !remix) return alert("Name + URL required");
-      localStorage.setItem('fa_pinned', JSON.stringify({name, bio, remix}));
-      renderPinned();
-      renderCreators();
-      document.getElementById('adminStatus').innerHTML = '<div style="color:#22c55e;margin-top:0.5rem">Pinned updated!</div>';
-    };
-
-    document.getElementById('addGameBtn').onclick = () => {
-      if (!isAdmin) return;
-      const title = document.getElementById('gameTitle').value.trim();
-      const url = document.getElementById('gameUrl').value.trim();
-      const desc = document.getElementById('gameDesc').value.trim();
-      if (!title || !url) return alert("Title + URL required");
-      const g = getGames();
-      g.push({title, url, desc});
-      localStorage.setItem('fa_games', JSON.stringify(g));
-      renderGames(); renderAdminGames();
-      document.getElementById('gameTitle').value = document.getElementById('gameUrl').value = document.getElementById('gameDesc').value = '';
-    };
-
-    // Wallet stub
-    document.getElementById('connectBtn').onclick = () => {
-      document.getElementById('walletStatus').textContent = '0x12...abcd';
-      document.getElementById('connectBtn').classList.add('hidden');
-      document.getElementById('disconnectBtn').classList.remove('hidden');
-    };
-    document.getElementById('disconnectBtn').onclick = () => {
-      document.getElementById('walletStatus').textContent = 'Not connected';
-      document.getElementById('connectBtn').classList.remove('hidden');
-      document.getElementById('disconnectBtn').classList.add('hidden');
-    };
-
-    renderPinned();
-    renderGames();
-    renderCreators();
-    renderAdminGames();
-    updatePointsUI();
-    loadStrikeData();
+      render();
+      loadBoard();
+    })();
   </script>
 </body>
 </html>
