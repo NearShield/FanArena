@@ -263,7 +263,7 @@
     <div class="sidebar-footer">
       <strong>LEVEL UP YOUR FANDOM</strong>
       <p style="font-size:0.75rem; color:var(--text-secondary); margin:0.4rem 0;">Hold. Vote. Earn. Win exclusive rewards.</p>
-      <button class="wallet-btn" style="width:100%; margin-top:0.5rem;">View Rewards →</button>
+      <button class="wallet-btn" style="width:100%; margin-top:0.5rem;" onclick="document.querySelector('[data-tab=rewards]').click()">View Rewards →</button>
     </div>
   </aside>
 
@@ -271,6 +271,7 @@
     <div class="topbar">
       <input class="search" placeholder="Search creators, tournaments...">
       <div>
+        <span id="pointsDisplay" style="margin-right:0.75rem; color:var(--orange); font-weight:700;">Points: 0</span>
         <span id="walletStatus" style="margin-right:0.75rem; color:var(--muted);">Not connected</span>
         <button id="connectBtn" class="wallet-btn">Connect Wallet</button>
         <button id="disconnectBtn" class="wallet-btn hidden" style="background:#333;">Disconnect</button>
@@ -281,7 +282,7 @@
       <div class="hero">
         <h1>BACK YOUR CREATORS.<br><span>OWN THE HYPE.</span></h1>
         <p>Fan Tokens power your voice, unlock rewards, and turn fandom into real impact.</p>
-        <button class="hero-btn">Explore Creators →</button>
+        <button class="hero-btn" onclick="document.querySelector('[data-tab=creators]').click()">Explore Creators →</button>
       </div>
 
       <div class="section-title">📌 PINNED CREATOR</div>
@@ -303,13 +304,21 @@
     </div>
 
     <div id="tab-creators" class="hidden">
-      <h2>Explore Creators</h2>
-      <p style="color:var(--muted)">Creator list will appear here.</p>
+      <div class="section-title">EXPLORE CREATORS</div>
+      <div id="creatorsList" class="tournaments"></div>
     </div>
 
     <div id="tab-tournaments" class="hidden">
-      <h2>Tournaments</h2>
-      <p style="color:var(--muted)">No tournaments yet. Coming soon.</p>
+      <div class="section-title">🏆 TOURNAMENTS</div>
+      <div id="tournamentGate" style="background:var(--card); border-radius:12px; padding:1.5rem; border:1px solid var(--border); text-align:center;">
+        <h3 style="margin:0 0 0.5rem;">Need 2 Points to Join</h3>
+        <p style="color:var(--text-secondary); margin:0 0 1rem;">Earn points by trading on Strike.</p>
+        <p id="currentPointsMsg" style="color:var(--orange); font-weight:700;">You have 0 points</p>
+        <button class="wallet-btn" onclick="document.querySelector('[data-tab=rewards]').click()">Earn Points →</button>
+      </div>
+      <div id="tournamentContent" class="hidden" style="margin-top:1rem;">
+        <p style="color:var(--muted);">No tournaments yet. Coming soon.</p>
+      </div>
     </div>
 
     <div id="tab-tokens" class="hidden">
@@ -328,8 +337,38 @@
     </div>
 
     <div id="tab-rewards" class="hidden">
-      <h2>Rewards</h2>
-      <p style="color:var(--muted)">Rewards system coming soon.</p>
+      <div class="section-title">⚡ EARN POINTS — LIVE STRIKE INTEGRATION</div>
+      <div style="background:var(--card); border-radius:12px; padding:1.5rem; border:1px solid var(--border); margin-bottom:1rem;">
+        <h3 style="margin:0 0 0.5rem;">Trade on Strike to Earn Points</h3>
+        <p style="color:var(--text-secondary); margin:0 0 1rem;">Trade perps on Strike Finance. Each qualifying trade earns points toward tournaments & predictions.</p>
+        <div style="display:flex; gap:1rem; align-items:center; flex-wrap:wrap; margin-bottom:1rem;">
+          <a href="https://app.strikefinance.org" target="_blank" class="wallet-btn" style="text-decoration:none; display:inline-block;">Trade on Strike →</a>
+          <button id="refreshStrikeBtn" class="wallet-btn" style="background:#333;">Refresh Data</button>
+        </div>
+        <p id="pointsStatus" style="margin:0.5rem 0; color:var(--orange); font-weight:700;">Current points: 0</p>
+        <p style="font-size:0.8rem; color:var(--muted);">Demo: Click “Claim Trade Points” after trading on Strike to record activity.</p>
+        <button id="claimTradeBtn" class="wallet-btn" style="margin-top:0.5rem;">Claim Trade Points (+1)</button>
+      </div>
+
+      <div class="section-title">LIVE STRIKE DATA</div>
+      <div id="strikeData" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:1rem; margin-bottom:1.5rem;">
+        <div class="tour-card" style="padding:1rem;">
+          <div style="font-size:0.75rem; color:var(--muted);">BTC Mark Price</div>
+          <div id="btcPrice" style="font-size:1.25rem; font-weight:700;">Loading...</div>
+        </div>
+        <div class="tour-card" style="padding:1rem;">
+          <div style="font-size:0.75rem; color:var(--muted);">ETH Mark Price</div>
+          <div id="ethPrice" style="font-size:1.25rem; font-weight:700;">Loading...</div>
+        </div>
+        <div class="tour-card" style="padding:1rem;">
+          <div style="font-size:0.75rem; color:var(--muted);">Top Copy Traders</div>
+          <div id="copyCount" style="font-size:1.25rem; font-weight:700;">Loading...</div>
+        </div>
+      </div>
+      <div id="strikeTraders" style="font-size:0.85rem; color:var(--text-secondary);"></div>
+
+      <div class="section-title" style="margin-top:1.5rem;">REWARDS</div>
+      <p style="color:var(--muted)">More rewards coming soon.</p>
     </div>
 
     <div id="tab-leaderboard" class="hidden">
@@ -362,6 +401,80 @@
   </main>
 
   <script>
+    // Points system
+    function getPoints() {
+      return parseInt(localStorage.getItem('fa_points') || '0', 10);
+    }
+    function setPoints(n) {
+      localStorage.setItem('fa_points', n);
+      updatePointsUI();
+    }
+    function updatePointsUI() {
+      const pts = getPoints();
+      document.getElementById('pointsDisplay').textContent = 'Points: ' + pts;
+      const status = document.getElementById('pointsStatus');
+      if (status) status.textContent = 'Current points: ' + pts;
+      const msg = document.getElementById('currentPointsMsg');
+      if (msg) msg.textContent = 'You have ' + pts + ' points';
+      // Gate tournaments
+      const gate = document.getElementById('tournamentGate');
+      const content = document.getElementById('tournamentContent');
+      if (gate && content) {
+        if (pts >= 2) {
+          gate.classList.add('hidden');
+          content.classList.remove('hidden');
+        } else {
+          gate.classList.remove('hidden');
+          content.classList.add('hidden');
+        }
+      }
+    }
+    document.getElementById('claimTradeBtn')?.addEventListener('click', () => {
+      setPoints(getPoints() + 1);
+      alert('Trade points claimed! +1 Point');
+    });
+
+    // Live Strike data
+    async function loadStrikeData() {
+      try {
+        // Mark prices
+        const priceRes = await fetch('https://api.strikefinance.org/price/v2/markPrice');
+        if (priceRes.ok) {
+          const prices = await priceRes.json();
+          const btc = prices.find(p => p.symbol === 'BTC-USD' || p.s === 'BTC-USD');
+          const eth = prices.find(p => p.symbol === 'ETH-USD' || p.s === 'ETH-USD');
+          if (btc) document.getElementById('btcPrice').textContent = '$' + (parseFloat(btc.markPrice || btc.p || 0)).toLocaleString();
+          if (eth) document.getElementById('ethPrice').textContent = '$' + (parseFloat(eth.markPrice || eth.p || 0)).toLocaleString();
+        }
+      } catch (e) {
+        document.getElementById('btcPrice').textContent = '—';
+        document.getElementById('ethPrice').textContent = '—';
+      }
+
+      try {
+        // Copy traders
+        const tradersRes = await fetch('https://api.strikefinance.org/v2/copy/discover?limit=5&platform=strike');
+        if (tradersRes.ok) {
+          const data = await tradersRes.json();
+          const list = data.data || data.traders || [];
+          document.getElementById('copyCount').textContent = list.length + ' active';
+          const container = document.getElementById('strikeTraders');
+          if (list.length) {
+            container.innerHTML = '<strong>Top Strike Traders:</strong><br>' + list.slice(0, 3).map(t => 
+              `• ${t.nickname || t.address?.slice(0,8) || 'Trader'} — Score: ${t.copy_score || '—'}`
+            ).join('<br>');
+          } else {
+            container.textContent = 'No public trader data available.';
+          }
+        }
+      } catch (e) {
+        document.getElementById('copyCount').textContent = '—';
+        document.getElementById('strikeTraders').textContent = 'Unable to load trader data.';
+      }
+    }
+
+    document.getElementById('refreshStrikeBtn')?.addEventListener('click', loadStrikeData);
+
     // Tab switching
     document.querySelectorAll('.nav-item').forEach(item => {
       item.addEventListener('click', e => {
@@ -434,7 +547,25 @@
       `;
     }
 
-    function renderGames() {
+    function renderCreators() {
+      const pinned = getPinned();
+      const list = document.getElementById('creatorsList');
+      if (!list) return;
+      if (!pinned) {
+        list.innerHTML = '<p style="color:var(--muted)">No creators yet.</p>';
+        return;
+      }
+      list.innerHTML = `
+        <div class="tour-card">
+          <div class="tour-img" style="background:linear-gradient(135deg,#4c1d95,#9a3412);"></div>
+          <div class="tour-body">
+            <div style="font-weight:700">${pinned.name}</div>
+            <div style="font-size:0.8rem; color:var(--text-secondary); margin:0.3rem 0">${pinned.bio}</div>
+            <button class="wallet-btn" style="margin-top:0.5rem; font-size:0.8rem;" onclick="window.open('${pinned.remix}','_blank')">View Profile</button>
+          </div>
+        </div>
+      `;
+    }
       const games = getGames();
       const c = document.getElementById('gamesContainer');
       if (!games.length) {
@@ -478,6 +609,7 @@
       if (!name || !remix) return alert("Name + URL required");
       localStorage.setItem('fa_pinned', JSON.stringify({name, bio, remix}));
       renderPinned();
+      renderCreators();
       document.getElementById('adminStatus').innerHTML = '<div style="color:#22c55e;margin-top:0.5rem">Pinned updated!</div>';
     };
 
@@ -508,7 +640,10 @@
 
     renderPinned();
     renderGames();
+    renderCreators();
     renderAdminGames();
+    updatePointsUI();
+    loadStrikeData();
   </script>
 </body>
 </html>
